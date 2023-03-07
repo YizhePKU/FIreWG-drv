@@ -1,0 +1,77 @@
+;
+; FireWG-drv.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=System ; TODO: specify appropriate Class
+ClassGuid={4d36e97d-e325-11ce-bfc1-08002be10318} ; TODO: specify appropriate ClassGuid
+Provider=%ManufacturerName%
+CatalogFile=FireWG-drv.cat
+DriverVer= ; TODO: set DriverVer in stampinf property pages
+PnpLockdown=1
+
+[DestinationDirs]
+DefaultDestDir = 12
+FireWG-drv_Device_CoInstaller_CopyFiles = 11
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+FireWG-drv.sys  = 1,,
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%FireWG-drv.DeviceDesc%=FireWG-drv_Device, Root\FireWG-drv ; TODO: edit hw-id
+
+[FireWG-drv_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+FireWG-drv.sys
+
+;-------------- Service installation
+[FireWG-drv_Device.NT.Services]
+AddService = FireWG-drv,%SPSVCINST_ASSOCSERVICE%, FireWG-drv_Service_Inst
+
+; -------------- FireWG-drv driver install sections
+[FireWG-drv_Service_Inst]
+DisplayName    = %FireWG-drv.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\FireWG-drv.sys
+
+;
+;--- FireWG-drv_Device Coinstaller installation ------
+;
+
+[FireWG-drv_Device.NT.CoInstallers]
+AddReg=FireWG-drv_Device_CoInstaller_AddReg
+CopyFiles=FireWG-drv_Device_CoInstaller_CopyFiles
+
+[FireWG-drv_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[FireWG-drv_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[FireWG-drv_Device.NT.Wdf]
+KmdfService =  FireWG-drv, FireWG-drv_wdfsect
+[FireWG-drv_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+DiskName = "FireWG-drv Installation Disk"
+FireWG-drv.DeviceDesc = "FireWG-drv Device"
+FireWG-drv.SVCDESC = "FireWG-drv Service"

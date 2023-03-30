@@ -102,6 +102,53 @@ HANDLE newNetBufferListPool() {
 	return poolHandle;
 }
 
+UINT32 addCallout(
+	WDFDEVICE device,
+	HANDLE filterEngine,
+	GUID calloutKey,
+	FWPS_CALLOUT_CLASSIFY_FN3 classifyFn,
+	FWPS_CALLOUT_NOTIFY_FN3 notifyFn,
+	wchar_t* displayName,
+	GUID applicableLayer
+) {
+	UINT32 id;
+
+	// Step 1: Register the callout with the filter engine.
+	FWPS_CALLOUT fwps_callout = {
+		calloutKey,
+		0,
+		classifyFn,
+		notifyFn,
+		NULL
+	};
+	NTSTATUS status = FwpsCalloutRegister(
+		WdfDeviceWdmGetDeviceObject(device),
+		&fwps_callout,
+		&id
+	);
+	if (!NT_SUCCESS(status)) {
+		DbgPrint("FwpsCalloutRegister failed with status %d\n", status);
+		return 0;
+	}
+
+	// Step 2: Add the callout to the system.
+	FWPM_CALLOUT fwpm_callout = { 0 };
+	fwpm_callout.calloutKey = calloutKey;
+	fwpm_callout.displayData.name = displayName;
+	fwpm_callout.applicableLayer = applicableLayer;
+	status = FwpmCalloutAdd(
+		filterEngine,
+		&fwpm_callout,
+		NULL,
+		NULL
+	);
+	if (!NT_SUCCESS(status)) {
+		DbgPrint("FwpmCalloutAdd failed with status %d\n", status);
+		return 0;
+	}
+	return id;
+}
+
 NET_BUFFER_LIST* newNetBufferList(HANDLE pool, ULONG size) {
 	NET_BUFFER_LIST* netBufferList = NULL;
 	NTSTATUS status = FwpsAllocateNetBufferAndNetBufferList(
@@ -149,4 +196,9 @@ void* getBuffer(NET_BUFFER_LIST* netBufferList) {
 		return NULL;
 	}
 	return buffer;
+}
+
+ULONG getBufferSize(NET_BUFFER_LIST* netBufferList) {
+	NET_BUFFER* netBuffer = NET_BUFFER_LIST_FIRST_NB(netBufferList);
+	return netBuffer->DataLength;
 }

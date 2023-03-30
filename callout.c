@@ -46,7 +46,8 @@ aleInboundClassifyFn(
 		return;
 	}
 
-	// Block inbound traffic for tracked APPs (because they didn't go though Wireguard).
+	// Block all inbound traffic for tracked APPs (because they didn't go though Wireguard).
+	// TODO: Allow APPs to listen on port (passive open).
 	FWP_VALUE appId = inFixedValues->incomingValue[FWPS_FIELD_ALE_AUTH_CONNECT_V4_ALE_APP_ID].value;
 	if (rsIsAppTracked(appId.byteBlob->data, appId.byteBlob->size)) {
 		DbgPrint("aleInboundClassifyFn blocked direct inbound packet\n");
@@ -75,15 +76,21 @@ aleOutboundClassifyFn(
 	UNREFERENCED_PARAMETER(flowContext);
 	UNREFERENCED_PARAMETER(classifyOut);
 
-	// We'll send (appId, protocol, localPort) to Rust.
+	// Send (appId, protocol, localAddress, localPort, remoteAddress, remotePort) to Rust.
 	FWP_VALUE appId = inFixedValues->incomingValue[FWPS_FIELD_ALE_AUTH_CONNECT_V4_ALE_APP_ID].value;
 	FWP_VALUE protocol = inFixedValues->incomingValue[FWPS_FIELD_ALE_AUTH_CONNECT_V4_IP_PROTOCOL].value;
+	FWP_VALUE localAddress = inFixedValues->incomingValue[FWPS_FIELD_ALE_AUTH_CONNECT_V4_IP_LOCAL_ADDRESS].value;
 	FWP_VALUE localPort = inFixedValues->incomingValue[FWPS_FIELD_ALE_AUTH_CONNECT_V4_IP_LOCAL_PORT].value;
+	FWP_VALUE remoteAddress = inFixedValues->incomingValue[FWPS_FIELD_ALE_AUTH_CONNECT_V4_IP_REMOTE_ADDRESS].value;
+	FWP_VALUE remotePort = inFixedValues->incomingValue[FWPS_FIELD_ALE_AUTH_CONNECT_V4_IP_REMOTE_PORT].value;
 	rsRegisterConnection(
 		appId.byteBlob->data,
 		appId.byteBlob->size,
 		protocol.uint8,
-		localPort.uint16
+		localAddress.uint32,
+		localPort.uint16,
+		remoteAddress.uint32,
+		remotePort.uint16
 	);
 
 	classifyOut->actionType = FWP_ACTION_PERMIT;

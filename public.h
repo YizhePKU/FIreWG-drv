@@ -24,8 +24,12 @@ void rsRegisterConnection(
 	const UINT8* appId, // UTF-16
 	UINT32 appIdSize, // length of appId in bytes
 	UINT8 protocol,
-	UINT16 localPort
+	UINT32 localAddress,
+	UINT16 localPort,
+	UINT32 remoteAddress,
+	UINT16 remotePort
 );
 
-void rsHandleInboundPacket(void* buf, ULONG size);
-void rsHandleOutboundPacket(void* buf, ULONG size);
+// Returns true if the packet should be permitted.
+bool rsHandleInboundPacket(void* buf, ULONG size);
+bool rsHandleOutboundPacket(void* buf, ULONG size);

@@ -126,10 +126,21 @@ ipInboundClassifyFn(
 		return;
 	}
 
-	rsHandleInboundPacket(
-		getBuffer(layerData),
-		getBufferSize(layerData)
-	);
+	char storage[2048];
+	void* buffer = getBuffer(layerData, storage);
+	ULONG bufferSize = getBufferSize(layerData);
+	if (buffer == NULL) {
+		DbgPrint("ipInboundClassifyFn: skipping NULL buffer packet\n");
+		return;
+	}
+
+	bool permitted = rsHandleInboundPacket(buffer, bufferSize);
+	if (permitted) {
+		classifyOut->actionType = FWP_ACTION_PERMIT;
+	}
+	else {
+		classifyOut->actionType = FWP_ACTION_BLOCK;
+	}
 }
 
 void NTAPI
@@ -142,8 +153,6 @@ ipOutboundClassifyFn(
 	UINT64 flowContext,
 	FWPS_CLASSIFY_OUT* classifyOut
 ) {
-	DbgPrint("ipOutboundClassifyFn entry\n");
-
 	UNREFERENCED_PARAMETER(inFixedValues);
 	UNREFERENCED_PARAMETER(inMetaValues);
 	UNREFERENCED_PARAMETER(layerData);
@@ -164,8 +173,19 @@ ipOutboundClassifyFn(
 		return;
 	}
 
-	rsHandleOutboundPacket(
-		getBuffer(layerData),
-		getBufferSize(layerData)
-	);
+	char storage[2048];
+	void* buffer = getBuffer(layerData, storage);
+	ULONG bufferSize = getBufferSize(layerData);
+	if (buffer == NULL) {
+		DbgPrint("ipOutboundClassifyFn: skipping NULL buffer packet\n");
+		return;
+	}
+
+	bool permitted = rsHandleOutboundPacket(buffer, bufferSize);
+	if (permitted) {
+		classifyOut->actionType = FWP_ACTION_PERMIT;
+	}
+	else {
+		classifyOut->actionType = FWP_ACTION_BLOCK;
+	}
 }

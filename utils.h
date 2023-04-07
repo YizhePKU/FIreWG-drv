@@ -42,7 +42,7 @@ UINT32 addCallout(
 NET_BUFFER_LIST* newNetBufferList(HANDLE pool, ULONG size);
 
 // Get a pointer to the actual buffer of a NET_BUFFER_LIST (assuming it only has one NET_BUFFER).
-void* getBuffer(NET_BUFFER_LIST* netBufferList);
+void* getBuffer(NET_BUFFER_LIST* netBufferList, void* storage);
 
 // Get the size of the buffer of a NET_BUFFER_LIST (assuming it only has one NET_BUFFER).
 ULONG getBufferSize(NET_BUFFER_LIST* netBufferList);

@@ -188,9 +188,9 @@ NET_BUFFER_LIST* newNetBufferList(HANDLE pool, ULONG size) {
 	return netBufferList;
 }
 
-void* getBuffer(NET_BUFFER_LIST* netBufferList) {
+void* getBuffer(NET_BUFFER_LIST* netBufferList, void* storage) {
 	NET_BUFFER* netBuffer = NET_BUFFER_LIST_FIRST_NB(netBufferList);
-	void* buffer = NdisGetDataBuffer(netBuffer, netBuffer->DataLength, NULL, 1, 0);
+	void* buffer = NdisGetDataBuffer(netBuffer, netBuffer->DataLength, storage, 1, 0);
 	if (buffer == NULL) {
 		DbgPrint("NdisGetDataBuffer returned NULL\n");
 		return NULL;

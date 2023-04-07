@@ -26,7 +26,32 @@ UINT64 ipInboundFilterId;
 UINT64 ipOutboundFilterId;
 
 void driverUnload(WDFDRIVER Driver) {
+	DbgPrint("EvtDriverUnload entry\n");
+
 	UNREFERENCED_PARAMETER(Driver);
+
+	// Unregister callouts
+	FwpsCalloutUnregisterByKey(&ALE_INBOUND_CALLOUT_KEY);
+	FwpsCalloutUnregisterByKey(&ALE_OUTBOUND_CALLOUT_KEY);
+	FwpsCalloutUnregisterByKey(&IP_INBOUND_CALLOUT_KEY);
+	FwpsCalloutUnregisterByKey(&IP_OUTBOUND_CALLOUT_KEY);
+
+	// Unregister filters
+	HANDLE engineHandle;
+	FwpmEngineOpen(
+		NULL,
+		RPC_C_AUTHN_WINNT,
+		NULL,
+		NULL,
+		&engineHandle
+	);
+	FwpmFilterDeleteById(engineHandle, aleInboundFilterId);
+	FwpmFilterDeleteById(engineHandle, aleOutboundFilterId);
+	FwpmFilterDeleteById(engineHandle, ipInboundFilterId);
+	FwpmFilterDeleteById(engineHandle, ipOutboundFilterId);
+
+	// Destroy packet injection handle
+	FwpsInjectionHandleDestroy(injectionHandle);
 }
 
 NTSTATUS

@@ -13,6 +13,9 @@
 extern HANDLE injectionHandle;
 extern HANDLE netBufferListPool;
 
+// Call rsInit() with an expanded stack size of MAXIMUM_EXPANSION_SIZE (about 70 bytes)
+EXPAND_STACK_CALLOUT ExpandedRsInit;
+
 void rsInit();
 
 bool rsIsAppTracked(

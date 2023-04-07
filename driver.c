@@ -194,7 +194,21 @@ DriverEntry(
 		return status;
 	}
 
-	rsInit();
+	DbgPrint("Begin Rust initialization\n");
+
+	status = KeExpandKernelStackAndCalloutEx(ExpandedRsInit, NULL, MAXIMUM_EXPANSION_SIZE, true, NULL);
+	if (!NT_SUCCESS(status)) {
+		DbgPrint("KeExpandKernelStackAndCalloutEx failed with status %d\n", status);
+		return status;
+	}
+
+	DbgPrint("DriverEntry exit\n");
 
 	return 0;
+}
+
+void ExpandedRsInit(void* Parameter) {
+	UNREFERENCED_PARAMETER(Parameter);
+
+	rsInit();
 }

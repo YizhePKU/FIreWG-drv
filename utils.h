@@ -37,12 +37,16 @@ UINT32 addCallout(
 	GUID applicableLayer
 );
 
-// Allocate a NET_BUFFER_LIST from a NET_BUFFER_LIST_POOL, or NULL if failed to allocate one.
-// The netBufferList is initialized with memory of `size` bytes.
-NET_BUFFER_LIST* newNetBufferList(HANDLE pool, ULONG size);
+// Allocate a new NET_BUFFER_LIST with `size` bytes.
+// Returns a pointer to the allocated NET_BUFFER_LIST, or NULL if failed to allocate one.
+NET_BUFFER_LIST* newNetBufferList(ULONG size);
 
 // Get a pointer to the actual buffer of a NET_BUFFER_LIST (assuming it only has one NET_BUFFER).
 void* getBuffer(NET_BUFFER_LIST* netBufferList, void* storage);
 
 // Get the size of the buffer of a NET_BUFFER_LIST (assuming it only has one NET_BUFFER).
 ULONG getBufferSize(NET_BUFFER_LIST* netBufferList);
+
+// Inject packet into the send/recv data path.
+void sendPacket(NET_BUFFER_LIST* packet, ULONG compartmentId);
+void recvPacket(NET_BUFFER_LIST* packet, ULONG compartmentId, ULONG interfaceIndex, ULONG subInterfaceIndex);

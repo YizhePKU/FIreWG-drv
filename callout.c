@@ -126,15 +126,12 @@ ipInboundClassifyFn(
 		return;
 	}
 
-	char storage[2048];
-	void* buffer = getBuffer(layerData, storage);
-	ULONG bufferSize = getBufferSize(layerData);
-	if (buffer == NULL) {
-		DbgPrint("ipInboundClassifyFn: skipping NULL buffer packet\n");
-		return;
-	}
-
-	bool permitted = rsHandleInboundPacket(buffer, bufferSize);
+	bool permitted = rsHandleInboundPacket(
+		layerData,
+		inMetaValues->compartmentId,
+		inFixedValues->incomingValue[FWPS_FIELD_DATAGRAM_DATA_V4_INTERFACE_INDEX].value.uint32,
+		inFixedValues->incomingValue[FWPS_FIELD_DATAGRAM_DATA_V4_SUB_INTERFACE_INDEX].value.uint32
+	);
 	if (permitted) {
 		classifyOut->actionType = FWP_ACTION_PERMIT;
 	}
@@ -173,15 +170,10 @@ ipOutboundClassifyFn(
 		return;
 	}
 
-	char storage[2048];
-	void* buffer = getBuffer(layerData, storage);
-	ULONG bufferSize = getBufferSize(layerData);
-	if (buffer == NULL) {
-		DbgPrint("ipOutboundClassifyFn: skipping NULL buffer packet\n");
-		return;
-	}
-
-	bool permitted = rsHandleOutboundPacket(buffer, bufferSize);
+	bool permitted = rsHandleOutboundPacket(
+		layerData, 
+		inMetaValues->compartmentId
+	);
 	if (permitted) {
 		classifyOut->actionType = FWP_ACTION_PERMIT;
 	}

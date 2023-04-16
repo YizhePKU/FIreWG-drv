@@ -33,6 +33,15 @@ void rsRegisterConnection(
 	UINT16 remotePort
 );
 
-// Returns true if the packet should be permitted.
-bool rsHandleInboundPacket(void* buf, ULONG size);
-bool rsHandleOutboundPacket(void* buf, ULONG size);
+// Handles packet in rust.
+// Returns true if the original packet should be permitted.
+bool rsHandleInboundPacket(
+	NET_BUFFER_LIST* packet, 
+	ULONG compartmentId,
+	ULONG interfaceIndex,
+	ULONG subInterfaceIndex
+);
+bool rsHandleOutboundPacket(
+	NET_BUFFER_LIST* packet, 
+	ULONG compartmentId
+);

@@ -149,10 +149,10 @@ UINT32 addCallout(
 	return id;
 }
 
-NET_BUFFER_LIST* newNetBufferList(HANDLE pool, ULONG size) {
+NET_BUFFER_LIST* newNetBufferList(ULONG size) {
 	NET_BUFFER_LIST* netBufferList = NULL;
 	NTSTATUS status = FwpsAllocateNetBufferAndNetBufferList(
-		pool,
+		netBufferListPool,
 		0,
 		0,
 		NULL,
@@ -165,7 +165,7 @@ NET_BUFFER_LIST* newNetBufferList(HANDLE pool, ULONG size) {
 		return NULL;
 	}
 	// Allocate non-pageable memory and describe it with MDL.
-	VOID* mem = ExAllocatePool2(POOL_FLAG_NON_PAGED, size, ((ULONG)'YYYY'));
+	void* mem = ExAllocatePool2(POOL_FLAG_NON_PAGED, size, ((ULONG)'Rust'));
 	if (mem == NULL) {
 		DbgPrint("ExAllocatePool2 returned NULL\n");
 		return NULL;
@@ -201,4 +201,55 @@ void* getBuffer(NET_BUFFER_LIST* netBufferList, void* storage) {
 ULONG getBufferSize(NET_BUFFER_LIST* netBufferList) {
 	NET_BUFFER* netBuffer = NET_BUFFER_LIST_FIRST_NB(netBufferList);
 	return netBuffer->DataLength;
+}
+
+NTAPI injectionComplete(
+	void* context,
+	NET_BUFFER_LIST* netBufferList,
+	BOOLEAN dispatchLevel
+) {
+	UNREFERENCED_PARAMETER(context);
+	UNREFERENCED_PARAMETER(netBufferList);
+	UNREFERENCED_PARAMETER(dispatchLevel);
+
+	DbgPrint("injectionComplete Entry\n");
+
+	// TODO: Free netBufferList here.
+}
+
+void sendPacket(NET_BUFFER_LIST* packet, ULONG compartmentId) {
+	NTSTATUS status = FwpsInjectNetworkSendAsync(
+		injectionHandle,
+		NULL,
+		0,
+		compartmentId,
+		packet,
+		injectionComplete,
+		NULL
+	);
+	if (!NT_SUCCESS(status)) {
+		DbgPrint("FwpsInjectNetworkSendAsync failed with status %d\n", status);
+	}
+}
+
+void recvPacket(
+	NET_BUFFER_LIST* packet,
+	ULONG compartmentId,
+	ULONG interfaceIndex,
+	ULONG subInterfaceIndex
+) {
+	NTSTATUS status = FwpsInjectNetworkReceiveAsync(
+		injectionHandle,
+		NULL,
+		0,
+		compartmentId,
+		interfaceIndex,
+		subInterfaceIndex,
+		packet,
+		injectionComplete,
+		NULL
+	);
+	if (!NT_SUCCESS(status)) {
+		DbgPrint("FwpsInjectNetworkReceiveAsync failed with status %d\n", status);
+	}
 }

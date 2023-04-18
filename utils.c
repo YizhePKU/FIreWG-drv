@@ -198,11 +198,11 @@ void freeNetBufferList(NET_BUFFER_LIST* netBufferList) {
 	if (mdl->Next != NULL) {
 		DbgPrint("Warning: Freeing a MDL chain that is not a single MDL node\n");
 	}
-	//void* mem = MmGetMdlVirtualAddress(mdl);
-	//IoFreeMdl(mdl);
+	void* mem = MmGetMdlVirtualAddress(mdl);
+	IoFreeMdl(mdl);
 
 	// Free memory
-	//ExFreePool(mem);
+	ExFreePool(mem);
 }
 
 void* getBuffer(NET_BUFFER_LIST* netBufferList, void* storage) {

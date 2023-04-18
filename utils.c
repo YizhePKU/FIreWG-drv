@@ -150,12 +150,34 @@ UINT32 addCallout(
 }
 
 NET_BUFFER_LIST* newNetBufferList(ULONG size) {
+	// Allocate non-pageable memory.
+	void* mem = ExAllocatePool2(POOL_FLAG_NON_PAGED, size, ((ULONG)'Rust'));
+	if (mem == NULL) {
+		DbgPrint("ExAllocatePool2 returned NULL\n");
+		return NULL;
+	}
+
+	// Describe the memory with MDL.
+	MDL* mdl = IoAllocateMdl(
+		mem,
+		size, // size of this mdl (which, in this case, is just the total data length)
+		FALSE,
+		FALSE,
+		NULL
+	);
+	if (mdl == NULL) {
+		DbgPrint("IoAllocateMdl returned NULL\n");
+		return NULL;
+	}
+	MmBuildMdlForNonPagedPool(mdl);
+
+	// Allocate NetBufferList initialized with the MDL.
 	NET_BUFFER_LIST* netBufferList = NULL;
 	NTSTATUS status = FwpsAllocateNetBufferAndNetBufferList(
 		netBufferListPool,
 		0,
 		0,
-		NULL,
+		mdl,
 		0,
 		size, // used for netBuffer->DataLength (total data length)
 		&netBufferList
@@ -164,28 +186,23 @@ NET_BUFFER_LIST* newNetBufferList(ULONG size) {
 		DbgPrint("FwpsAllocateNetBufferAndNetBufferList failed with status %d\n", status);
 		return NULL;
 	}
-	// Allocate non-pageable memory and describe it with MDL.
-	void* mem = ExAllocatePool2(POOL_FLAG_NON_PAGED, size, ((ULONG)'Rust'));
-	if (mem == NULL) {
-		DbgPrint("ExAllocatePool2 returned NULL\n");
-		return NULL;
-	}
-	MDL* outputMdl = IoAllocateMdl(
-		mem,
-		size, // size of this mdl (which, in this case, is just the total data length)
-		FALSE,
-		FALSE,
-		NULL
-	);
-	if (outputMdl == NULL) {
-		DbgPrint("IoAllocateMdl returned NULL\n");
-		return NULL;
-	}
-	MmBuildMdlForNonPagedPool(outputMdl);
-	NET_BUFFER* outputNetBuffer = NET_BUFFER_LIST_FIRST_NB(netBufferList);
-	outputNetBuffer->CurrentMdl = outputMdl;
-	outputNetBuffer->MdlChain = outputMdl;
 	return netBufferList;
+}
+
+void freeNetBufferList(NET_BUFFER_LIST* netBufferList) {
+	// Free NetBufferList
+	MDL* mdl = netBufferList->FirstNetBuffer->CurrentMdl;
+	FwpsFreeNetBufferList(netBufferList);
+
+	// Free MDL
+	if (mdl->Next != NULL) {
+		DbgPrint("Warning: Freeing a MDL chain that is not a single MDL node\n");
+	}
+	//void* mem = MmGetMdlVirtualAddress(mdl);
+	//IoFreeMdl(mdl);
+
+	// Free memory
+	//ExFreePool(mem);
 }
 
 void* getBuffer(NET_BUFFER_LIST* netBufferList, void* storage) {
@@ -214,7 +231,7 @@ NTAPI injectionComplete(
 
 	DbgPrint("injectionComplete Entry\n");
 
-	// TODO: Free netBufferList here.
+	freeNetBufferList(netBufferList);
 }
 
 void sendPacket(NET_BUFFER_LIST* packet, ULONG compartmentId) {

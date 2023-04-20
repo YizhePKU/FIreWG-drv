@@ -126,6 +126,20 @@ ipInboundClassifyFn(
 		return;
 	}
 
+	// Since the kernel already parsed the IP headers, layerData now points at the start of TCP/UDP headers.
+	// We need to "retreat" layerData back to the start of the IP headers.
+	NTSTATUS status = NdisRetreatNetBufferListDataStart(
+		layerData,
+		inMetaValues->ipHeaderSize,
+		0,
+		NULL,
+		NULL
+	);
+	if (!NT_SUCCESS(status)) {
+		DbgPrint("NdisRetreatNetBufferListDataStart failed with status %d\n", status);
+		classifyOut->actionType = FWP_ACTION_PERMIT;
+	}
+
 	bool permitted = rsHandleInboundPacket(
 		layerData,
 		inMetaValues->compartmentId,
@@ -138,6 +152,14 @@ ipInboundClassifyFn(
 	else {
 		classifyOut->actionType = FWP_ACTION_BLOCK;
 	}
+
+	// After we're done with the packet, restore layerData to point at the start of TCP/UDP headers.
+	NdisAdvanceNetBufferListDataStart(
+		layerData,
+		inMetaValues->ipHeaderSize,
+		false,
+		NULL
+	);
 }
 
 void NTAPI

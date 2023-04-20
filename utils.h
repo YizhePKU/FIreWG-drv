@@ -50,3 +50,6 @@ ULONG getBufferSize(NET_BUFFER_LIST* netBufferList);
 // Inject packet into the send/recv data path.
 void sendPacket(NET_BUFFER_LIST* packet, ULONG compartmentId);
 void recvPacket(NET_BUFFER_LIST* packet, ULONG compartmentId, ULONG interfaceIndex, ULONG subInterfaceIndex);
+
+// Break into the kernel debugger.
+void dbgBreak();

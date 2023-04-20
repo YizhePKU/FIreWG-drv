@@ -270,3 +270,7 @@ void recvPacket(
 		DbgPrint("FwpsInjectNetworkReceiveAsync failed with status %d\n", status);
 	}
 }
+
+void dbgBreak() {
+	DbgBreakPoint();
+}

@@ -220,16 +220,28 @@ ULONG getBufferSize(NET_BUFFER_LIST* netBufferList) {
 	return netBuffer->DataLength;
 }
 
-NTAPI injectionComplete(
+NTAPI injectionCompleteInbound(
 	void* context,
 	NET_BUFFER_LIST* netBufferList,
 	BOOLEAN dispatchLevel
 ) {
 	UNREFERENCED_PARAMETER(context);
-	//UNREFERENCED_PARAMETER(netBufferList);
 	UNREFERENCED_PARAMETER(dispatchLevel);
 
-	DbgPrint("injectionComplete: status = %d\n", netBufferList->Status);
+	DbgPrint("injectionCompleteInbound: status = %d\n", netBufferList->Status);
+
+	freeNetBufferList(netBufferList);
+}
+
+NTAPI injectionCompleteOutbound(
+	void* context,
+	NET_BUFFER_LIST* netBufferList,
+	BOOLEAN dispatchLevel
+) {
+	UNREFERENCED_PARAMETER(context);
+	UNREFERENCED_PARAMETER(dispatchLevel);
+
+	DbgPrint("injectionCompleteOutbound: status = %d\n", netBufferList->Status);
 
 	freeNetBufferList(netBufferList);
 }
@@ -241,7 +253,7 @@ void sendPacket(NET_BUFFER_LIST* packet, ULONG compartmentId) {
 		0,
 		compartmentId,
 		packet,
-		injectionComplete,
+		injectionCompleteOutbound,
 		NULL
 	);
 	if (!NT_SUCCESS(status)) {
@@ -263,7 +275,7 @@ void recvPacket(
 		interfaceIndex,
 		subInterfaceIndex,
 		packet,
-		injectionComplete,
+		injectionCompleteInbound,
 		NULL
 	);
 	if (!NT_SUCCESS(status)) {

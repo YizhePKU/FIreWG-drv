@@ -226,10 +226,10 @@ NTAPI injectionComplete(
 	BOOLEAN dispatchLevel
 ) {
 	UNREFERENCED_PARAMETER(context);
-	UNREFERENCED_PARAMETER(netBufferList);
+	//UNREFERENCED_PARAMETER(netBufferList);
 	UNREFERENCED_PARAMETER(dispatchLevel);
 
-	DbgPrint("injectionComplete Entry\n");
+	DbgPrint("injectionComplete: status = %d\n", netBufferList->Status);
 
 	freeNetBufferList(netBufferList);
 }

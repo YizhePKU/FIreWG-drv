@@ -143,8 +143,8 @@ ipInboundClassifyFn(
 	bool permitted = rsHandleInboundPacket(
 		layerData,
 		inMetaValues->compartmentId,
-		inFixedValues->incomingValue[FWPS_FIELD_DATAGRAM_DATA_V4_INTERFACE_INDEX].value.uint32,
-		inFixedValues->incomingValue[FWPS_FIELD_DATAGRAM_DATA_V4_SUB_INTERFACE_INDEX].value.uint32
+		inFixedValues->incomingValue[FWPS_FIELD_INBOUND_IPPACKET_V4_INTERFACE_INDEX].value.uint32,
+		inFixedValues->incomingValue[FWPS_FIELD_INBOUND_IPPACKET_V4_SUB_INTERFACE_INDEX].value.uint32
 	);
 	if (permitted) {
 		classifyOut->actionType = FWP_ACTION_PERMIT;
